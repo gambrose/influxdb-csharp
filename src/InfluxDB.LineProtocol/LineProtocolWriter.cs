@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using InfluxDB.LineProtocol.Payload;
 
 namespace InfluxDB.LineProtocol
 {
@@ -24,12 +23,12 @@ namespace InfluxDB.LineProtocol
 
         public LineProtocolWriter Measurement(string name)
         {
-            if (name == null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
+            return Measurement(new LineProtocolName(name));
+        }
 
-            if (string.IsNullOrWhiteSpace(name))
+        public LineProtocolWriter Measurement(LineProtocolName name)
+        {
+            if (name == default(LineProtocolName))
             {
                 throw new ArgumentOutOfRangeException(nameof(name));
             }
@@ -46,7 +45,7 @@ namespace InfluxDB.LineProtocol
                     throw new InvalidOperationException();
             }
 
-            textWriter.Write(EscapeName(name));
+            textWriter.Write(name.Escaped);
 
             Position = WriterPosition.MeasurementWriten;
 
@@ -55,6 +54,26 @@ namespace InfluxDB.LineProtocol
 
         public LineProtocolWriter Tag(string name, string value)
         {
+            return Tag(new LineProtocolName(name), new LineProtocolName(value));
+        }
+
+        public LineProtocolWriter Tag(LineProtocolName name, string value)
+        {
+            return Tag(name, new LineProtocolName(value));
+        }
+
+        public LineProtocolWriter Tag(LineProtocolName name, LineProtocolName value)
+        {
+            if (name == default(LineProtocolName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(name));
+            }
+
+            if (value == default(LineProtocolName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
             switch (Position)
             {
                 case WriterPosition.MeasurementWriten:
@@ -65,14 +84,19 @@ namespace InfluxDB.LineProtocol
                     throw new InvalidOperationException();
             }
 
-            textWriter.Write(EscapeName(name));
+            textWriter.Write(name.Escaped);
             textWriter.Write('=');
-            textWriter.Write(EscapeName(value));
+            textWriter.Write(value.Escaped);
 
             return this;
         }
 
         public LineProtocolWriter Field(string name, float value)
+        {
+            return Field(new LineProtocolName(name), value);
+        }
+
+        public LineProtocolWriter Field(LineProtocolName name, float value)
         {
             WriteFieldKey(name);
             textWriter.Write('=');
@@ -85,6 +109,11 @@ namespace InfluxDB.LineProtocol
 
         public LineProtocolWriter Field(string name, double value)
         {
+            return Field(new LineProtocolName(name), value);
+        }
+
+        public LineProtocolWriter Field(LineProtocolName name, double value)
+        {
             WriteFieldKey(name);
             textWriter.Write('=');
             textWriter.Write(value.ToString(CultureInfo.InvariantCulture));
@@ -96,6 +125,11 @@ namespace InfluxDB.LineProtocol
 
         public LineProtocolWriter Field(string name, decimal value)
         {
+            return Field(new LineProtocolName(name), value);
+        }
+
+        public LineProtocolWriter Field(LineProtocolName name, decimal value)
+        {
             WriteFieldKey(name);
             textWriter.Write('=');
             textWriter.Write(value.ToString(CultureInfo.InvariantCulture));
@@ -106,6 +140,11 @@ namespace InfluxDB.LineProtocol
         }
 
         public LineProtocolWriter Field(string name, long value)
+        {
+            return Field(new LineProtocolName(name), value);
+        }
+
+        public LineProtocolWriter Field(LineProtocolName name, long value)
         {
             WriteFieldKey(name);
             textWriter.Write('=');
@@ -119,6 +158,11 @@ namespace InfluxDB.LineProtocol
 
         public LineProtocolWriter Field(string name, string value)
         {
+            return Field(new LineProtocolName(name), value);
+        }
+
+        public LineProtocolWriter Field(LineProtocolName name, string value)
+        {
             WriteFieldKey(name);
             textWriter.Write('=');
             textWriter.Write('"');
@@ -131,6 +175,11 @@ namespace InfluxDB.LineProtocol
         }
 
         public LineProtocolWriter Field(string name, bool value)
+        {
+            return Field(new LineProtocolName(name), value);
+        }
+
+        public LineProtocolWriter Field(LineProtocolName name, bool value)
         {
             WriteFieldKey(name);
             textWriter.Write('=');
@@ -177,8 +226,13 @@ namespace InfluxDB.LineProtocol
             return $"{GetType().Name} at postion {this.Position}";
         }
 
-        private void WriteFieldKey(string name)
+        private void WriteFieldKey(LineProtocolName name)
         {
+            if (name == default(LineProtocolName))
+            {
+                throw new ArgumentOutOfRangeException(nameof(name));
+            }
+
             switch (Position)
             {
                 case WriterPosition.MeasurementWriten:
@@ -192,16 +246,7 @@ namespace InfluxDB.LineProtocol
                     throw new InvalidOperationException();
             }
 
-            textWriter.Write(EscapeName(name));
-        }
-
-        public static string EscapeName(string nameOrKey)
-        {
-            if (nameOrKey == null) throw new ArgumentNullException(nameof(nameOrKey));
-            return nameOrKey
-                .Replace("=", "\\=")
-                .Replace(" ", "\\ ")
-                .Replace(",", "\\,");
+            textWriter.Write(name.Escaped);
         }
 
         public enum WriterPosition
