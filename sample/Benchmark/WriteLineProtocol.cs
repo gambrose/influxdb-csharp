@@ -13,14 +13,16 @@ namespace Benchmark
     {
         private const int N = 500;
 
-        private readonly (DateTime timestamp, double value)[] data;
+        private static readonly string[] Colours = { "red", "blue", "green" };
+
+        private readonly (DateTime timestamp, string colour, double value)[] data;
         private readonly LineProtocolClient client;
 
         public WriteLineProtocol()
         {
             var random = new Random(755);
             var now = DateTime.UtcNow;
-            data = Enumerable.Range(0, N).Select(i => (now.AddMilliseconds(random.Next(2000)), random.NextDouble())).ToArray();
+            data = Enumerable.Range(0, N).Select(i => (now.AddMilliseconds(random.Next(2000)), Colours[random.Next(Colours.Length)], random.NextDouble())).ToArray();
 
             client = new EverythingIsAwesomeClient();
         }
@@ -38,7 +40,10 @@ namespace Benchmark
                     {
                         {"value", point.value}
                     },
-                    null,
+                    new Dictionary<string, string>
+                    {
+                        {"colour", point.colour}
+                    },
                     point.timestamp
                 ));
             }
@@ -53,7 +58,7 @@ namespace Benchmark
 
             foreach (var point in data)
             {
-                payload.Add(new ExamplePoint(point.value, point.timestamp));
+                payload.Add(new ExamplePoint(point.value, point.colour, point.timestamp));
             }
 
             return await client.WriteAsync(payload);
@@ -62,18 +67,20 @@ namespace Benchmark
 
     internal struct ExamplePoint : ILineProtocolPayload
     {
-        public ExamplePoint(double value, DateTime timestamp)
+        public ExamplePoint(double value, string colour, DateTime timestamp)
         {
+            Colour = colour;
             Value = value;
             Timestamp = timestamp;
         }
 
+        public string Colour { get; }
         public double Value { get; }
         public DateTime Timestamp { get; }
 
         public void Format(LineProtocolWriter writer)
         {
-            writer.Measurement("example").Field("value", Value).Timestamp(Timestamp);
+            writer.Measurement("example").Tag("colour", Colour).Field("value", Value).Timestamp(Timestamp);
         }
     }
 }
