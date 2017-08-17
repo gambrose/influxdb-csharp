@@ -3,15 +3,15 @@ namespace Benchmark
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net.Http;
     using System.Threading.Tasks;
     using BenchmarkDotNet.Attributes;
+    using InfluxDB.LineProtocol;
     using InfluxDB.LineProtocol.Client;
     using InfluxDB.LineProtocol.Payload;
 
     public class WriteLineProtocol
     {
-        private const int N = 100;
+        private const int N = 500;
 
         private readonly (DateTime timestamp, double value)[] data;
         private readonly LineProtocolClient client;
@@ -25,7 +25,7 @@ namespace Benchmark
             client = new EverythingIsAwesomeClient();
         }
 
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public async Task<LineProtocolWriteResult> LineProtocolPoint()
         {
             var payload = new LineProtocolPayload();
@@ -44,6 +44,36 @@ namespace Benchmark
             }
 
             return await client.WriteAsync(payload);
+        }
+
+        [Benchmark]
+        public async Task<LineProtocolWriteResult> CustomStruct()
+        {
+            var payload = new List<ExamplePoint>(data.Length);
+
+            foreach (var point in data)
+            {
+                payload.Add(new ExamplePoint(point.value, point.timestamp));
+            }
+
+            return await client.WriteAsync(payload);
+        }
+    }
+
+    internal struct ExamplePoint : ILineProtocolPayload
+    {
+        public ExamplePoint(double value, DateTime timestamp)
+        {
+            Value = value;
+            Timestamp = timestamp;
+        }
+
+        public double Value { get; }
+        public DateTime Timestamp { get; }
+
+        public void Format(LineProtocolWriter writer)
+        {
+            writer.Measurement("example").Field("value", Value).Timestamp(Timestamp);
         }
     }
 }
