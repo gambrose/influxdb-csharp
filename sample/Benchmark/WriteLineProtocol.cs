@@ -13,6 +13,10 @@ namespace Benchmark
     {
         private const int N = 500;
 
+        private const string MEASUREMENT_NAME = "example";
+        private const string TAG_NAME = "colour";
+        private const string FIELD_NAME = "value";
+
         private static readonly string[] Colours = { "red", "blue", "green" };
 
         private readonly (DateTime timestamp, string colour, double value)[] data;
@@ -22,7 +26,9 @@ namespace Benchmark
         {
             var random = new Random(755);
             var now = DateTime.UtcNow;
-            data = Enumerable.Range(0, N).Select(i => (now.AddMilliseconds(random.Next(2000)), Colours[random.Next(Colours.Length)], random.NextDouble())).ToArray();
+            data = Enumerable.Range(0, N)
+                .Select(i => (now.AddMilliseconds(random.Next(2000)), Colours[random.Next(Colours.Length)], random
+                    .NextDouble())).ToArray();
 
             client = new EverythingIsAwesomeClient();
         }
@@ -35,14 +41,14 @@ namespace Benchmark
             foreach (var point in data)
             {
                 payload.Add(new LineProtocolPoint(
-                    "example",
+                    MEASUREMENT_NAME,
                     new Dictionary<string, object>
                     {
-                        {"value", point.value}
+                        {FIELD_NAME, point.value}
                     },
                     new Dictionary<string, string>
                     {
-                        {"colour", point.colour}
+                        {TAG_NAME, point.colour}
                     },
                     point.timestamp
                 ));
@@ -63,24 +69,29 @@ namespace Benchmark
 
             return await client.WriteAsync(payload);
         }
-    }
 
-    internal struct ExamplePoint : ILineProtocolPayload
-    {
-        public ExamplePoint(double value, string colour, DateTime timestamp)
+        private struct ExamplePoint : ILineProtocolPayload
         {
-            Colour = colour;
-            Value = value;
-            Timestamp = timestamp;
-        }
+            private static readonly LineProtocolName MeasurementName = new LineProtocolName(MEASUREMENT_NAME);
+            private static readonly LineProtocolName ColourTagName = new LineProtocolName(TAG_NAME);
+            private static readonly LineProtocolName ValueFieldName = new LineProtocolName(FIELD_NAME);
 
-        public string Colour { get; }
-        public double Value { get; }
-        public DateTime Timestamp { get; }
+            public ExamplePoint(double value, string colour, DateTime timestamp)
+            {
+                Colour = colour;
+                Value = value;
+                Timestamp = timestamp;
+            }
 
-        public void Format(LineProtocolWriter writer)
-        {
-            writer.Measurement("example").Tag("colour", Colour).Field("value", Value).Timestamp(Timestamp);
+            public string Colour { get; }
+            public double Value { get; }
+            public DateTime Timestamp { get; }
+
+            public void Format(LineProtocolWriter writer)
+            {
+                writer.Measurement(MeasurementName).Tag(ColourTagName, Colour).Field(ValueFieldName, Value)
+                    .Timestamp(Timestamp);
+            }
         }
     }
 }
