@@ -2,23 +2,33 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("Benchmark")]
+
 namespace InfluxDB.LineProtocol.Client
 {
+
+
     public class LineProtocolClient
     {
         readonly HttpClient _httpClient;
         readonly string _database, _username, _password;
 
         public LineProtocolClient(Uri serverBaseAddress, string database, string username = null, string password = null)
+            : this(new HttpClientHandler(), serverBaseAddress, database, username, password)
+        {
+        }
+
+        protected LineProtocolClient(HttpMessageHandler handler, Uri serverBaseAddress, string database, string username = null, string password = null)
         {
             if (serverBaseAddress == null) throw new ArgumentNullException(nameof(serverBaseAddress));
             if (string.IsNullOrEmpty(database)) throw new ArgumentException("A database must be specified");
 
-            _httpClient = new HttpClient { BaseAddress = serverBaseAddress };
+            _httpClient = new HttpClient(handler) { BaseAddress = serverBaseAddress };
             _database = database;
             _username = username;
             _password = password;
