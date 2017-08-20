@@ -9,6 +9,7 @@ using InfluxDB.LineProtocol.Payload;
 
 namespace Benchmark
 {
+    [MemoryDiagnoser]
     public class WriteLineProtocol
     {
         private const int N = 500;
