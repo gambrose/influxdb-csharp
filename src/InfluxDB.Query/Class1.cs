@@ -31,6 +31,14 @@ namespace InfluxDB.Query
 
     }
 
+    public static class SeriesCollectionExtensions
+    {
+        public static IList<(TGroupBy tags, TValues values, DateTime time)> Flatten<TValues, TGroupBy>(this IList<Series<TValues, TGroupBy>> series)
+        {
+            return null;
+        }
+    }
+
     public class InfluxGroupByQuery<TValues, TGroupBy>
     {
 
@@ -43,7 +51,7 @@ namespace InfluxDB.Query
             return null;
         }
 
-        public InfluxGroupByQuery<TValues, TGroupBy> GroupBy<TGroupBy>(TimeSpan timeInterval)
+        public InfluxSelectQuery<TValues, TTags, TFields> GroupBy(TimeSpan timeInterval)
         {
             return null;
         }
@@ -71,7 +79,7 @@ namespace InfluxDB.Query
             return null;
         }
 
-        public IList<Series<TValues, TGroupBy>> Query<TValues, TGroupBy>(InfluxGroupByQuery<TValues, TGroupBy> query)
+        public IList<Series<TValues, TTags>> Query<TValues, TTags>(InfluxGroupByQuery<TValues, TTags> query)
         {
             return null;
         }

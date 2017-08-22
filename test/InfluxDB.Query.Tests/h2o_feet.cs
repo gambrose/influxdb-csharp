@@ -22,11 +22,15 @@ namespace InfluxDB.Query.Tests
     {
         public void Select_all_fields_and_tags_from_a_single_measurement()
         {
-            // "SELECT * FROM h2o_feet";
+            // The example of this is "SELECT * FROM h2o_feet";
+            // This would project tags and fields into one obejct. We cannot support this in C# without createing a new type.
+            // Instead query using group by (which is more effiecten on the wire) then flatten in the results when we itterate.
 
             var db = new InfluxDb();
 
             var resuts = db.Query(h2o_feet.SelectAll().GroupByAll());
+
+            // Should map to "SELECT \"level description\",water_level FROM h2o_feet GROUP BY location"; 
 
             foreach (var (tags, values, time) in resuts.Flatten())
             {
@@ -85,14 +89,9 @@ namespace InfluxDB.Query.Tests
 
             var resuts = db.Query(query);
 
-            foreach (var series in resuts)
+            foreach (var (values, time) in resuts)
             {
-                //series.Tags.location;
-
-                foreach (var (values, time) in series.Points)
-                {
-                    //values.water_level;
-                }
+                //values.water_level;
             }
         }
 
