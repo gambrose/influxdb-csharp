@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace InfluxDB.Query.Client
 {
     public class InfluxDb
     {
-        public IList<(TValues values, DateTime time)> Query<TValues>(string query)
+        public Task<IList<(TValues values, DateTime time)>> Query<TValues>(string query)
         {
             return null;
         }
 
-        public IList<Series<TValues, TTags>> Query<TValues, TTags>(string query)
+        public Task<IList<Series<TValues, TTags>>> Query<TValues, TTags>(string query)
         {
             return null;
         }

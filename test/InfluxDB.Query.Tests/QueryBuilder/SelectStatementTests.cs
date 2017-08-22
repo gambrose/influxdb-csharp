@@ -1,13 +1,14 @@
 using System;
+using System.Threading.Tasks;
 using InfluxDB.Query.Client;
 using InfluxDB.Query.QueryBuilder;
 using InfluxDB.Query.Tests.Noaa;
 
-namespace InfluxDB.Query.Tests
+namespace InfluxDB.Query.Tests.QueryBuilder
 {
     public class SelectStatementTests
     {
-        public void Select_all_fields_and_tags_from_a_single_measurement()
+        public async Task Select_all_fields_and_tags_from_a_single_measurement()
         {
             // The example of this is "SELECT * FROM h2o_feet";
             // This would project tags and fields into one obejct. We cannot support this in C# without createing a new type.
@@ -15,7 +16,7 @@ namespace InfluxDB.Query.Tests
 
             var db = new InfluxDb();
 
-            var resuts = db.Query(h2o_feet.SelectAll().GroupByAll());
+            var resuts = await db.Query(WaterDepth.SelectAll().GroupByAll());
 
             // Should map to "SELECT \"level description\",water_level FROM h2o_feet GROUP BY location"; 
 
@@ -25,15 +26,15 @@ namespace InfluxDB.Query.Tests
             }
         }
 
-        public void Select_specific_tags_and_fields_from_a_single_measurement()
+        public async Task Select_specific_tags_and_fields_from_a_single_measurement()
         {
             //   "SELECT \"level description\",location,water_level FROM h2o_feet";
 
-            var query = h2o_feet.Select((fields, tags) => new { fields.level_description, tags.location, fields.water_level });
+            var query = WaterDepth.Select((fields, tags) => new { fields.level_description, tags.location, fields.water_level });
 
             var db = new InfluxDb();
 
-            var resuts = db.Query(query);
+            var resuts = await db.Query(query);
 
             foreach (var (values, time) in resuts)
             {

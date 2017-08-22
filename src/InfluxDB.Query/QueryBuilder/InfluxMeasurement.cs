@@ -5,6 +5,10 @@ namespace InfluxDB.Query.QueryBuilder
 {
     public class InfluxMeasurement<TTags, TFields>
     {
+        public InfluxMeasurement(string name)
+        {
+        }
+
         public static InfluxSelectQuery<TValues, TTags, TFields> Select<TValues>(Expression<Func<TFields, TValues>> select)
         {
             return null;

@@ -2,8 +2,12 @@
 
 namespace InfluxDB.Query.Tests.Noaa
 {
-    public class h2o_feet : InfluxMeasurement<h2o_feet.Tags, h2o_feet.Fields>
+    public class WaterDepth : InfluxMeasurement<WaterDepth.Tags, WaterDepth.Fields>
     {
+        public WaterDepth() : base("h2o_feet")
+        {
+        }
+
         public interface Tags
         {
             string location { get; }
@@ -11,7 +15,7 @@ namespace InfluxDB.Query.Tests.Noaa
 
         public interface Fields
         {
-            // Should be "level description" 
+            [InfluxKeyName("level description")]
             string level_description { get; set; }
 
             double water_level { get; set; }
